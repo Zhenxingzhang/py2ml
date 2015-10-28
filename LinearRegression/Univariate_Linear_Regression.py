@@ -7,14 +7,17 @@ import numpy as np
 data = loadtxt('../Data/ex1data1.txt', delimiter=',')
 
 input = data[:, 0]
+print input.shape
+print type(input)
 output = data[:, 1]
+print input.shape
 
 #Plot the data
-scatter(input, output, marker='o', c='b')
-title('Profits distribution')
-xlabel('Population of City in 10,000s')
-ylabel('Profit in $10,000s')
-show()
+# scatter(input, output, marker='o', c='b')
+# title('Profits distribution')
+# xlabel('Population of City in 10,000s')
+# ylabel('Profit in $10,000s')
+# show()
 
 def compute_cost(X, y, theta):
     '''
@@ -23,19 +26,19 @@ def compute_cost(X, y, theta):
     :param theta: the weights [d+1, 1]
     :return: the squared error
     '''
-    m = y.size
+    length = y.size
 
-    predictions = X.dot(theta)
+    predictions = X.dot(theta).flatten()
     sqErrors = (predictions - y) ** 2
 
-    J = (1.0/(2 * m)) * sqErrors.sum()
+    J = (1.0/(2 * length)) * sqErrors.sum()
+    return J
 
 theta = [0.5 , 1]
 
 m = input.size
-print input
-print ones((m,1))
+#Add a column of ones to X (interception data)
+X = ones(shape=(m, 2))
+X[:, 1] = input
 
-X = np.append( ones((m,1)), input, 1)
-
-print X
+print compute_cost(X, output, theta)
