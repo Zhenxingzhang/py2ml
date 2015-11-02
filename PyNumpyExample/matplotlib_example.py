@@ -7,7 +7,7 @@ from matplotlib import cm
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
 X, Y, Z = axes3d.get_test_data(0.05)
-print X.shape, Y.shape, Z.shape
+print Z
 cset = ax.contour(X, Y, Z, cmap=cm.coolwarm)
 ax.clabel(cset, fontsize=9, inline=1)
 

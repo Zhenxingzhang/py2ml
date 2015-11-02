@@ -42,10 +42,11 @@ def gradient_descent(X, y, theta, alpha, num_iters):
 
         length = theta.size
 
-        subtract_factor  = np.zeros((length,1), dtype=np.float64)
+        subtract_factor = np.zeros((length,1), dtype=np.float64)
 
+        errors = predictions - y
         for i in range(length):
-            error_sum = ((predictions - y) * X[:, i:i+1]).sum()
+            error_sum = ( errors * X[:, i:i+1]).sum()
             subtract_factor[i][0] = alpha*(1.0/m)*error_sum
 
         theta = theta - subtract_factor
