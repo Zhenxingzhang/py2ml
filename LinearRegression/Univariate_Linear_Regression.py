@@ -1,170 +1,110 @@
-# from numpy import loadtxt, zeros, ones, array, linspace, logspace
-# from pylab import scatter, show, title, xlabel, ylabel, plot, contour
-# import numpy as np
-#
-#
-# #Load the dataset
-# data = loadtxt('../Data/ex1data1.txt', delimiter=',')
-#
-# input = data[:, 0]
-# print input.shape
-# print type(input)
-# output = data[:, 1]
-# print input.shape
-#
-# #Plot the data
-# scatter(input, output, marker='o', c='b')
-# title('Profits distribution')
-# xlabel('Population of City in 10,000s')
-# ylabel('Profit in $10,000s')
-# show()
-#
-# def compute_cost(X, y, theta):
-#     '''
-#     :param X: the input data vector [m,d]
-#     :param y: the groundtruth output[m,1]
-#     :param theta: the weights [d+1, 1]
-#     :return: the squared error
-#     '''
-#     length = y.size
-#
-#     predictions = X.dot(theta).flatten()
-#     sqErrors = (predictions - y) ** 2
-#
-#     J = (1.0/(2 * length)) * sqErrors.sum()
-#     return J
-#
-# def gradient_descent(X, y, theta, alpha, num_iters):
-#
-#     length = y.size
-#
-#     J_history = zeros(shape=(num_iters, 1))
-#
-#     for i in range(num_iters):
-#         predictions = X.dot(theta).flatten()
-#
-#         errors_x1 = (predictions - y) * X[:, 0]
-#         errors_x2 = (predictions - y) * X[:, 1]
-#
-#         theta[0][0] = theta[0][0] - alpha * (1.0 / m) * errors_x1.sum()
-#         theta[1][0] = theta[1][0] - alpha * (1.0 / m) * errors_x2.sum()
-#
-#         J_history[i, 0] = compute_cost(X, y, theta)
-#         print theta, J_history[i,0]
-#
-#     return theta, J_history
-#
-#
-# #Initialize theta parameters
-# theta = zeros(shape=(2, 1))
-#
-# iterations = 150;
-# alpha = 0.01;
-#
-# m = input.size
-# #Add a column of ones to X (interception data)
-# X = ones(shape=(m, 2))
-# X[:, 1] = input
-#
-# print compute_cost(X, output, theta)
-#
-# optimized_theta, J_history = gradient_descent(X, output, theta, alpha, iterations)
-# print optimized_theta
-#
-# #Plot the results
-# result = X.dot(theta).flatten()
-# plot(data[:, 0], result)
-# show()
-
-from numpy import loadtxt, zeros, ones, array, linspace, logspace
+from numpy import loadtxt, zeros, ones, array, linspace, logspace, arange
 from pylab import scatter, show, title, xlabel, ylabel, plot, contour
-
-
-#Evaluate the linear regression
-def compute_cost(X, y, theta):
-    '''
-    Comput cost for linear regression
-    '''
-    #Number of training samples
-    m = y.size
-
-    predictions = X.dot(theta).flatten()
-
-    sqErrors = (predictions - y) ** 2
-
-    J = (1.0 / (2 * m)) * sqErrors.sum()
-
-    return J
-
-
-def gradient_descent(X, y, theta, alpha, num_iters):
-    '''
-    Performs gradient descent to learn theta
-    by taking num_items gradient steps with learning
-    rate alpha
-    '''
-    m = y.size
-    J_history = zeros(shape=(num_iters, 1))
-
-    for i in range(num_iters):
-
-        predictions = X.dot(theta).flatten()
-
-        errors_x1 = (predictions - y) * X[:, 0]
-        errors_x2 = (predictions - y) * X[:, 1]
-
-        theta[0][0] = theta[0][0] - alpha * (1.0 / m) * errors_x1.sum()
-        theta[1][0] = theta[1][0] - alpha * (1.0 / m) * errors_x2.sum()
-
-        J_history[i, 0] = compute_cost(X, y, theta)
-
-    return theta, J_history
+import numpy as np
 
 
 #Load the dataset
 data = loadtxt('../Data/ex1data1.txt', delimiter=',')
 
+input = data[:, 0]
+print input.shape
+print type(input)
+output = data[:, 1]
+print input.shape
+
 #Plot the data
-scatter(data[:, 0], data[:, 1], marker='o', c='b')
-title('Profits distribution')
-xlabel('Population of City in 10,000s')
-ylabel('Profit in $10,000s')
-#show()
+# scatter(input, output, marker='o', c='b')
+# title('Profits distribution')
+# xlabel('Population of City in 10,000s')
+# ylabel('Profit in $10,000s')
+# show()
 
-X = data[:, 0]
-y = data[:, 1]
+def compute_cost(X, y, theta):
+    '''
+    :param X: the input data vector [m,d]
+    :param y: the groundtruth output[m,1]
+    :param theta: the weights [d+1, 1]
+    :return: the squared error
+    '''
+    length = y.size
 
+    predictions = X.dot(theta).flatten()
+    sqErrors = (predictions - y) ** 2
 
-#number of training samples
-m = y.size
+    J = (1.0/(2 * length)) * sqErrors.sum()
+    return J
 
-#Add a column of ones to X (interception data)
-it = ones(shape=(m, 2))
-it[:, 1] = X
+def gradient_descent(X, y, theta, alpha, num_iters):
+    '''
+    :param X:
+    :param y:
+    :param theta:
+    :param alpha:
+    :param num_iters:
+    :return:
+    '''
+    J_history = zeros(shape=(num_iters, 1))
 
-#Initialize theta parameters
+    m = y.size
+    for iter in range(num_iters-1):
+        predictions = X.dot(theta[:, iter]).flatten()
+
+        errors_x1 = (predictions - y) * X[:, 0]
+        errors_x2 = (predictions - y) * X[:, 1]
+
+        theta[0][iter+1] = theta[0][iter] - alpha*(1.0/m)*errors_x1.sum()
+        theta[1][iter+1] = theta[1][iter] - alpha*(1.0/m)*errors_x2.sum()
+
+        J_history[iter] = compute_cost(X, y, theta[:, iter])
+
+    return theta, J_history
+
 theta = zeros(shape=(2, 1))
 
+m = input.size
+#Add a column of ones to X (interception data)
+X = ones(shape=(m, 2))
+X[:, 1] = input
+
+print compute_cost(X, output, theta)
+
 #Some gradient descent settings
-iterations = 1500
+iterations = 100
 alpha = 0.01
 
-#compute and display initial cost
-print compute_cost(it, y, theta)
+theta = zeros(shape=(2, iterations))
 
-theta, J_history = gradient_descent(it, y, theta, alpha, iterations)
+theta, J_h = gradient_descent(X, output, theta, alpha, iterations)
 
-print theta
-#Predict values for population sizes of 35,000 and 70,000
-predict1 = array([1, 3.5]).dot(theta).flatten()
-print 'For population = 35,000, we predict a profit of %f' % (predict1 * 10000)
-predict2 = array([1, 7.0]).dot(theta).flatten()
-print 'For population = 70,000, we predict a profit of %f' % (predict2 * 10000)
+print J_h
 
 #Plot the results
-result = it.dot(theta).flatten()
+result = X.dot(theta[:,iterations-1]).flatten()
 plot(data[:, 0], result)
 show()
+
+#Plot the convergence of cost function
+plot(arange(iterations), J_h)
+xlabel('Iterations')
+ylabel('Cost Function')
+show()
+
+from mpl_toolkits.mplot3d import Axes3D
+import matplotlib.pyplot as plt
+import numpy as np
+
+fig = plt.figure()
+ax = fig.gca(projection='3d')
+
+print theta[0,:].shape, theta[1,:].shape, J_h.shape
+
+ax.plot(theta[0,:].flatten(), theta[1,:].flatten(), J_h.flatten())
+ax.set_xlabel("Theta 0 Axis")
+ax.set_ylabel("Theta 1 Axis")
+ax.set_zlabel("Cost Function Axis")
+ax.set_title("Overview")
+
+plt.show()
 
 
 #Grid over which we will calculate J
@@ -181,7 +121,7 @@ for t1, element in enumerate(theta0_vals):
         thetaT = zeros(shape=(2, 1))
         thetaT[0][0] = element
         thetaT[1][0] = element2
-        J_vals[t1, t2] = compute_cost(it, y, thetaT)
+        J_vals[t1, t2] = compute_cost(X, output, thetaT)
 
 #Contour plot
 J_vals = J_vals.T
@@ -191,3 +131,22 @@ xlabel('theta_0')
 ylabel('theta_1')
 scatter(theta[0][0], theta[1][0])
 show()
+
+
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib import cm
+from matplotlib.ticker import LinearLocator, FormatStrFormatter
+import matplotlib.pyplot as plt
+import numpy as np
+
+fig = plt.figure()
+surf = ax.plot_surface(theta0_vals, theta1_vals, J_vals[:, 1], rstride=1, cstride=1, cmap=cm.coolwarm,
+        linewidth=0, antialiased=False)
+# ax.set_zlim(-1.01, 1.01)
+
+# ax.zaxis.set_major_locator(LinearLocator(10))
+# ax.zaxis.set_major_formatter(FormatStrFormatter('%.02f'))
+
+# fig.colorbar(surf, shrink=0.5, aspect=5)
+
+plt.show()
