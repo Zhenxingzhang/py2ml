@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from pylab import scatter, show, title, xlabel, ylabel, plot, contour
 
 def sigmoid(x):
-    return 1/(1+ math.exp(-x))
+    return 1.0 /(1.0 + math.exp(-1.0 * x))
 
 def predict(x, theta):
     return map(sigmoid, x.dot(theta))
@@ -13,9 +13,9 @@ def costFunction(X, y, theta):
     m = y.size
     predictions = predict(X, theta)
 
-    subtraction = np.ones((y.size))
+    subtraction = np.ones((y.size), dtype=np.float)
 
-    cost_rows = -1 *(y * map(math.log, predictions)) - (subtraction-y).flatten()* map(math.log, (subtraction-predictions).flatten())
+    cost_rows = -1.0 *(y * map(math.log, predictions)) - (subtraction-y)* map(math.log, (subtraction-predictions))
     return cost_rows.sum()/m
 
 def gradient_descent(X, y, theta, alpha, iters):
@@ -32,8 +32,8 @@ def gradient_descent(X, y, theta, alpha, iters):
         errors = predictions - y
 
         for i in range(m):
-
-            error_sum = ( errors * X[:, i]).sum()
+            error = errors * X[:, i]
+            error_sum = error.sum()
             subtract_factor[i][0] = alpha*(1.0/m)*error_sum
 
         theta = theta - subtract_factor
@@ -42,6 +42,24 @@ def gradient_descent(X, y, theta, alpha, iters):
         J_history[iter, 0] = costFunction(X, y, theta)
 
     return theta, J_history
+
+def prediction( X, theta):
+    '''Predict whether the label
+    is 0 or 1 using learned logistic
+    regression parameters '''
+    m, n = X.shape
+    p =np.zeros(shape=(m, 1))
+
+    h = predict(X, theta)
+
+    for it in range(m):
+        if h[it] > 0.5:
+            p[it, 0] = 1
+        else:
+            p[it, 0] = 0
+
+    return p
+
 
 # #test sigmoid function
 # input = [-4, -3, -2, -1, 0, 1, 2, 3, 4]
@@ -68,7 +86,7 @@ print y.shape
 #test predict function
 theta = np.zeros((3,1))
 
-input = np.ones((y.size,3))
+input = np.ones((y.size,3), dtype=np.float)
 input[:,1:3] = X[:,:2]
 
 theta = [[0.03333333],[4.0030722],[ 3.75428074]]
@@ -101,10 +119,20 @@ pos_indices = [i for i, x in enumerate(y) if x == 1]
 neg_indices = [i for i, x in enumerate(y) if x == 0]
 
 print theta_r[0], theta_r[1], theta_r[2]
-x1 = theta_r[2]/-theta_r[0]
-y1 = theta_r[1]/-theta_r[0]
+x1 = -theta_r[0]/theta_r[1]
+y1 = -theta_r[0]/theta_r[2]
 print x1, y1
 plt.plot(X[pos_indices, 0], X[pos_indices, 1], 'k+')
 plt.plot(X[neg_indices, 0], X[neg_indices, 1], 'yo')
-plt.plot([0, x1], [y1, 0], 'ro')
+plt.plot([0, x1], [y1, 0], 'r')
 plt.show()
+
+#Compute accuracy on our training set
+p = prediction(input, theta_r)
+
+count = 0
+for idx in range(p.size):
+    if p[idx] == y[idx]:
+        count +=1
+print count
+print 'Train Accuracy: %f' % ((count / float(y.size)) * 100.0)
