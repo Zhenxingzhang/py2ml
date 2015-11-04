@@ -17,7 +17,7 @@ def costFunction(X, y, theta, lamda=1.0):
 
     cost_rows = -1.0 *(y * map(math.log, predictions)) - (subtraction-y)* map(math.log, (subtraction-predictions))
 
-    regularized = ((theta[1:]**2).sum()*lamda)/2.0*m
+    regularized = ((theta[1:]**2).sum()*lamda)/ (2.0*m)
     # print "regularization: ", regularized
     return cost_rows.sum()/m + regularized
 
@@ -38,12 +38,13 @@ def gradient_descent(X, y, theta, alpha, lamda, iters):
             error = errors * X[:, i]
             error_sum = error.sum()
             if i == 0:
-                subtract_factor[i][0] = alpha*(1.0/m)*error_sum
+                # subtract_factor[i][0] = alpha*(1.0/m)*error_sum
+                theta[i] = theta[i] - alpha*(1.0/m)*error_sum
             else:
-                subtract_factor[i][0] = alpha*(1.0/m)*error_sum + lamda*theta[i]/m
+                # subtract_factor[i][0] = alpha*(error_sum + lamda*theta[i])/m
+                theta[i] = theta[i] - alpha*(error_sum + lamda*theta[i])/m
 
-
-        theta = theta - subtract_factor
+        # theta = theta - subtract_factor
         # print theta
 
         J_history[iter, 0] = costFunction(X, y, theta)
@@ -115,11 +116,15 @@ input = map_feature(X[:, 0], X[:,1])
 
 
 theta = np.zeros((28,1), dtype=np.float)
+
+print '0.693 = ', costFunction(input, y, theta)
+
 iters = 1000
-alpha = 0.05
-lamda = 2
+alpha = 0.1
+lamda = 1
 #
 theta_r, j_history = gradient_descent(input, y, theta, alpha,lamda, iters)
+
 
 plot(np.arange(iters), j_history)
 xlabel('Iterations')
@@ -128,13 +133,24 @@ show()
 
 print theta_r
 
+#Compute accuracy on our training set
+p = prediction(input, theta_r)
+
+count = 0
+for idx in range(p.size):
+    if p[idx] == y[idx]:
+        count +=1
+print count
+print 'Train Accuracy: %f' % ((count / float(y.size)) * 100.0)
+
 #Plot Boundary
 u = np.linspace(-1, 1.5, 50)
+print u
 v = np.linspace(-1, 1.5, 50)
 z = np.zeros(shape=(len(u), len(v)))
 for i in range(len(u)):
     for j in range(len(v)):
-        z[i, j] = (map_feature(np.array(u[i]), np.array(v[j])).dot(np.array(theta)))
+        z[i, j] = (map_feature(np.array(u[i]), np.array(v[j])).dot(np.array(theta_r)))
 
 z = z.T
 plt.contour(u, v, z)
