@@ -20,21 +20,25 @@ def costFunction(X, y, theta):
 
 def gradient_descent(X, y, theta, alpha, iters):
 
-    m = theta.shape[0]
+    m = y.size
     J_history = np.zeros((iters ,1))
 
     for iter in range(iters):
 
         predictions = predict(X, theta)
 
-        subtract_factor = np.zeros((m,1), dtype=np.float64)
+        size = theta.size
+
+        subtract_factor = np.zeros((size,1), dtype=np.float64)
 
         errors = predictions - y
 
-        for i in range(m):
+        for i in range(size):
             error = errors * X[:, i]
             error_sum = error.sum()
             subtract_factor[i][0] = alpha*(1.0/m)*error_sum
+
+        print subtract_factor[0]
 
         theta = theta - subtract_factor
         # print theta
@@ -168,11 +172,17 @@ y = data[:, 2]
 
 #test gradient_descent
 theta = np.zeros((28,1), dtype=np.float)
-iters = 1000
-alpha = 0.05
+iters = 2000
+alpha = 0.1
 lamda = 1
 
 theta_r, j_history  = gradient_descent(X, y , theta, alpha, iters)
+
+plot(np.arange(iters), j_history)
+xlabel('Iterations')
+ylabel('Cost Function')
+show()
+
 
 print theta_r
 

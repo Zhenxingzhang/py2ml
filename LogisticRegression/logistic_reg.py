@@ -30,7 +30,7 @@ def cost_function_reg(theta, X, y, l):
             + (l / (2.0 * m)) * (thetaR.T.dot(thetaR))
 
     delta = h - y
-    sumdelta = delta.T.dot(X[:, 1])
+    sumdelta = delta.T.dot(X[:, 0])
     grad1 = (1.0 / m) * sumdelta
 
     XR = X[:, 1:X.shape[1]]

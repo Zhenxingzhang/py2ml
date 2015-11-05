@@ -8,7 +8,7 @@ def sigmoid(x):
 def predict(x, theta):
     return map(sigmoid, x.dot(theta))
 
-def costFunction(X, y, theta, lamda=1.0):
+def costFunction(X, y, theta, lamda):
 
     m = y.size
     predictions = predict(X, theta)
@@ -17,37 +17,37 @@ def costFunction(X, y, theta, lamda=1.0):
 
     cost_rows = -1.0 *(y * map(math.log, predictions)) - (subtraction-y)* map(math.log, (subtraction-predictions))
 
-    regularized = ((theta[1:]**2).sum()*lamda)/ (2.0*m)
-    # print "regularization: ", regularized
+    regularized = ( (theta[1:]**2).sum() * lamda) / (2.0*m)
+    print "regularization: ", regularized
     return cost_rows.sum()/m + regularized
+    # return cost_rows.sum()/m
 
 def gradient_descent(X, y, theta, alpha, lamda, iters):
 
-    m = theta.size
+    m = y.size
     J_history = np.zeros((iters ,1))
 
     for iter in range(iters):
 
         predictions = predict(X, theta)
 
-        subtract_factor = np.zeros((m,1), dtype=np.float64)
-
         errors = predictions - y
 
-        for i in range(m):
-            error = errors * X[:, i]
+        errors_sum_1 =alpha*(1.0 / m) * (errors*X[:, 0]).sum()
+
+        theta[0] = theta[0] - errors_sum_1
+
+        subtract_factor = np.zeros((theta.size-1,1), dtype=np.float)
+
+        for j in range(1, theta.size):
+            error = errors * X[:, j]
             error_sum = error.sum()
-            if i == 0:
-                # subtract_factor[i][0] = alpha*(1.0/m)*error_sum
-                theta[i] = theta[i] - alpha*(1.0/m)*error_sum
-            else:
-                # subtract_factor[i][0] = alpha*(error_sum + lamda*theta[i])/m
-                theta[i] = theta[i] - alpha*(error_sum + lamda*theta[i])/m
+            subtract_factor[j-1][0] = alpha*(1.0/m)*(error_sum + lamda * theta[j])
+            # subtract_factor[j-1][0] = alpha*(1.0/m)*(error_sum)
 
-        # theta = theta - subtract_factor
-        # print theta
+        theta[1:] = theta[1:] - subtract_factor
 
-        J_history[iter, 0] = costFunction(X, y, theta)
+        J_history[iter, 0] = costFunction(X, y, theta, lamda)
 
     return theta, J_history
 
@@ -101,7 +101,7 @@ def map_feature(x1, x2):
 #load the dataset
 data = np.loadtxt('../Data/ex2data2.txt', delimiter=',')
 
-X = data[:, :2]/100
+X = data[:, :2]
 y = data[:, 2]
 print y.shape
 #plot the training dataset
@@ -117,21 +117,22 @@ input = map_feature(X[:, 0], X[:,1])
 
 theta = np.zeros((28,1), dtype=np.float)
 
-print '0.693 = ', costFunction(input, y, theta)
+lamda = 1
+
+print '0.693 = ', costFunction(input, y, theta, lamda)
 
 iters = 1000
-alpha = 0.1
-lamda = 1
+alpha = 1
+lamda = 0
 #
-theta_r, j_history = gradient_descent(input, y, theta, alpha,lamda, iters)
-
+theta_r, j_history = gradient_descent(input, y, theta, alpha, lamda, iters)
 
 plot(np.arange(iters), j_history)
 xlabel('Iterations')
 ylabel('Cost Function')
 show()
 
-print theta_r
+
 
 #Compute accuracy on our training set
 p = prediction(input, theta_r)
@@ -145,7 +146,6 @@ print 'Train Accuracy: %f' % ((count / float(y.size)) * 100.0)
 
 #Plot Boundary
 u = np.linspace(-1, 1.5, 50)
-print u
 v = np.linspace(-1, 1.5, 50)
 z = np.zeros(shape=(len(u), len(v)))
 for i in range(len(u)):
