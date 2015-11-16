@@ -15,7 +15,7 @@ def costFunction(X, y, theta, lamda):
 
     subtraction = np.ones((y.size), dtype=np.float)
 
-    cost_rows = -1.0 *(y * map(math.log, predictions)) - (subtraction-y)* map(math.log, (subtraction-predictions))
+    cost_rows = -1.0 *(y * map(math.log, predictions)) - (1-y)* map(math.log, (1-predictions))
 
     regularized = ( (theta[1:]**2).sum() * lamda) / (2.0*m)
     print "regularization: ", regularized
@@ -117,7 +117,7 @@ input = map_feature(X[:, 0], X[:,1])
 
 theta = np.zeros((28,1), dtype=np.float)
 
-lamda = 1
+lamda = 0
 
 print '0.693 = ', costFunction(input, y, theta, lamda)
 
