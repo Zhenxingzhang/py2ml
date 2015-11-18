@@ -18,6 +18,8 @@ the shape of an array is a tuple of integers giving the size of the array along 
 import  numpy as np
 
 a = np.array([1,2,3])
+print a
+print 1-a
 b = np.array([1,2,3])
 b.shape=(3,1)
 print a*b

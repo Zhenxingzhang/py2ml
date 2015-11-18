@@ -6,7 +6,8 @@ def sigmoid(x):
     return 1.0 /(1.0 + math.exp(-1.0 * x))
 
 def predict(x, theta):
-    return map(sigmoid, x.dot(theta))
+    # return map(sigmoid, x.dot(theta))
+    return 1./(1.+np.exp(-(np.dot(x,theta))))
 
 def costFunction(X, y, theta, lamda):
 
@@ -21,6 +22,91 @@ def costFunction(X, y, theta, lamda):
     print "regularization: ", regularized
     return cost_rows.sum()/m + regularized
     # return cost_rows.sum()/m
+
+
+def hyp_log_r(X,theta):
+    """(matrix,vector) -> vector
+
+    Takes dataset 'X' and parameter vector 'theta' and
+    returns logistic regression hypothesis/model.
+
+    >>> theta=np.array([[1],[2],[3]])
+    >>> X=np.array([[ 1.,  0.,  0.],\
+                    [ 0.,  1.,  0.],\
+                    [ 0.,  0.,  1.]])
+    >>> theta=np.array([[1.],[-1.],[0.]])
+    >>> hyp_log_r(X,theta)
+    array([[ 0.73105858],
+           [ 0.26894142],
+           [ 0.5       ]])
+
+    """
+    return 1./(1.+np.exp(-(np.dot(X,theta))))
+
+def cost(h,y,theta,lambd):
+    """(vector,vector,vector,number) -> number
+
+    Takes hypothesis 'h', target variable vector 'y',
+    parameter vector 'theta' and regularization parameter number 'lambd'
+    and returns the logistic regression cost function.
+
+    >>> h=np.array([[.5],[1.],[0.]])
+    >>> y=np.array([[1.],[1.],[0.]])
+    >>> theta=np.array([[1.],[1.],[0.]])
+    >>> lambd=0
+    >>> cost(h,y,theta,lambd)
+    0.23774928408898272
+
+    """
+    m=np.shape(y)[0]
+    #first term of cost function
+    j_1=float(np.dot(y.T,np.log(h)))
+    #second term of cost function
+    j_2=float(np.dot(1-y.T,np.log(1-h)))
+    #check andrew ng's regularization lecture
+    reg=((lambd/(2.0*m))*np.sum(np.power(theta[1:],2)))
+    print j_1, j_2, reg
+    return -((1./m)*(j_1+j_2))+reg
+
+def grad_descent(X, y, theta, alpha, lambd, n_iter):
+    """(vector,vector,vector,number,number,number) -> vector,vector
+
+    Takes parameter vector 'theta', hypothesis vector 'h',
+    target variable vector 'y',  dataset 'X',
+    learning rate parameter number 'alpha', number of iterations 'n_iter',
+     and regularization parameter number 'lambd'
+    to compute the gradient descent applied to the logistic regression model.
+    Returns hypothesis vector 'h' with the update parameters 'theta'
+    and the updated parameter vector 'theta' itself.
+
+    *** Example on the logistic_regression function ***
+
+    """
+    #initialize list of lists 'thetas' and 'costs' (ended up not using costs)
+    # thetas=[]
+    costs=[]
+    #number of rows of y
+    m=np.shape(y)[0]
+
+    h=hyp_log_r(X,theta)
+
+    #run n_iter times
+    for i in range(n_iter):
+        #update first value(bias) of theta
+        theta[0]=theta[0]-((1.0*alpha/m)*np.sum(h-y))
+        #update rest of paramters of theta (regularized version)
+        theta[1:]=theta[1:]-((1.0*alpha/m)*np.dot(X[:,1:].T,(h-y))-((1.0*lambd/m)*theta[1:]))
+        #computes hypothesis with updated parameter theta (to remove)
+        h=hyp_log_r(X,theta)
+        #computes hypothesis with updated parameter theta
+        #note: to use with learning curves
+        j=cost(h,y,theta,lambd)
+        #append updated 'theta' and 'cost' in list of lists 'thetas' and
+        #'costs'
+        # thetas.append(theta)
+        costs.append(j)
+
+    return theta, costs
 
 def gradient_descent(X, y, theta, alpha, lamda, iters):
 
@@ -102,8 +188,8 @@ def map_feature(x1, x2):
 data = np.loadtxt('../Data/ex2data2.txt', delimiter=',')
 
 X = data[:, :2]
-y = data[:, 2]
-print y.shape
+y = data[:, 2:]
+print y.shape, type(y)
 #plot the training dataset
 pos_indices = [i for i, x in enumerate(y) if x == 1]
 neg_indices = [i for i, x in enumerate(y) if x == 0]
@@ -121,11 +207,14 @@ lamda = 0
 
 print '0.693 = ', costFunction(input, y, theta, lamda)
 
-iters = 1000
+iters = 10000
 alpha = 1
 lamda = 0
 #
-theta_r, j_history = gradient_descent(input, y, theta, alpha, lamda, iters)
+# theta_r, j_history = gradient_descent(input, y, theta, alpha, lamda, iters)
+
+theta_r, j_history = grad_descent(input, y, theta, alpha, lamda, iters)
+
 
 plot(np.arange(iters), j_history)
 xlabel('Iterations')
