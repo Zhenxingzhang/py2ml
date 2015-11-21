@@ -38,7 +38,7 @@ def gradient_descent(X, y, theta, alpha, iters):
             error_sum = error.sum()
             subtract_factor[i][0] = alpha*(1.0/m)*error_sum
 
-        print subtract_factor[0]
+        # print subtract_factor[0]
 
         theta = theta - subtract_factor
         # print theta
@@ -167,16 +167,21 @@ def map_feature(x1, x2):
 #load the dataset
 data = np.loadtxt('../Data/ex2data2.txt', delimiter=',')
 
-X = map_feature(data[:,0], data[:,1])
+# X = map_feature(data[:,0], data[:,1])
+input = np.ones((data.shape[0], 3), dtype=np.float)
+
+
+input[:,1:] = data[:,1:3]
 y = data[:, 2]
 
 #test gradient_descent
-theta = np.zeros((28,1), dtype=np.float)
-iters = 2000
+dimension = 3
+theta = np.zeros((dimension,1), dtype=np.float)
+iters = 1000
 alpha = 0.1
 lamda = 1
 
-theta_r, j_history  = gradient_descent(X, y , theta, alpha, iters)
+theta_r, j_history  = gradient_descent(input, y , theta, alpha, iters)
 
 plot(np.arange(iters), j_history)
 xlabel('Iterations')
@@ -186,6 +191,18 @@ show()
 
 print theta_r
 
+#Compute accuracy on our training set
+p = prediction(input, theta_r)
+
+print p
+
+count = 0
+for idx in range(p.size):
+    if p[idx] == y[idx]:
+        count +=1
+print count
+print 'Train Accuracy: %f' % ((count / float(y.size)) * 100.0)
+
 #Plot Boundary
 u = np.linspace(-1, 1.5, 50)
 print u
@@ -193,8 +210,8 @@ v = np.linspace(-1, 1.5, 50)
 z = np.zeros(shape=(len(u), len(v)))
 for i in range(len(u)):
     for j in range(len(v)):
-        z[i, j] = (map_feature(np.array(u[i]), np.array(v[j])).dot(np.array(theta_r)))
-
+        # z[i, j] = (map_feature(np.array(u[i]), np.array(v[j])).dot(np.array(theta_r)))
+        z[i, j] = np.array([1.0, u[i], v[j]]).dot(np.array(theta_r))
 z = z.T
 plt.contour(u, v, z)
 plt.title('lambda = %f' % lamda)

@@ -65,7 +65,7 @@ def cost(h,y,theta,lambd):
     j_2=float(np.dot(1-y.T,np.log(1-h)))
     #check andrew ng's regularization lecture
     reg=((lambd/(2.0*m))*np.sum(np.power(theta[1:],2)))
-    print j_1, j_2, reg
+    # print j_1, j_2, reg
     return -((1./m)*(j_1+j_2))+reg
 
 def grad_descent(X, y, theta, alpha, lambd, n_iter):
@@ -95,7 +95,7 @@ def grad_descent(X, y, theta, alpha, lambd, n_iter):
         #update first value(bias) of theta
         theta[0]=theta[0]-((1.0*alpha/m)*np.sum(h-y))
         #update rest of paramters of theta (regularized version)
-        theta[1:]=theta[1:]-((1.0*alpha/m)*np.dot(X[:,1:].T,(h-y))-((1.0*lambd/m)*theta[1:]))
+        theta[1:]=theta[1:]-((1.0*alpha/m)*np.dot(X[:,1:].T,(h-y))+((1.0*lambd/m)*theta[1:]))
         #computes hypothesis with updated parameter theta (to remove)
         h=hyp_log_r(X,theta)
         #computes hypothesis with updated parameter theta
@@ -145,6 +145,7 @@ def prediction( X, theta):
     p =np.zeros(shape=(m, 1))
 
     h = predict(X, theta)
+    print h
 
     for it in range(m):
         if h[it] > 0.5:
@@ -198,23 +199,23 @@ plt.plot(X[pos_indices, 0], X[pos_indices, 1], 'k+')
 plt.plot(X[neg_indices, 0], X[neg_indices, 1], 'yo')
 plt.show()
 
-input = map_feature(X[:, 0], X[:,1])
+# input = map_feature(X[:, 0], X[:,1])
 
+input = np.ones((data.shape[0], 3), dtype=np.float)
+input[:,1:] = data[:,1:3]
 
-theta = np.zeros((28,1), dtype=np.float)
+dimension = 3
+theta = np.zeros((dimension,1), dtype=np.float)
 
-lamda = 0
-
-print '0.693 = ', costFunction(input, y, theta, lamda)
-
-iters = 10000
-alpha = 1
+iters = 1000
+alpha = 0.1
 lamda = 0
 #
 # theta_r, j_history = gradient_descent(input, y, theta, alpha, lamda, iters)
 
 theta_r, j_history = grad_descent(input, y, theta, alpha, lamda, iters)
 
+print theta_r
 
 plot(np.arange(iters), j_history)
 xlabel('Iterations')
@@ -233,13 +234,23 @@ for idx in range(p.size):
 print count
 print 'Train Accuracy: %f' % ((count / float(y.size)) * 100.0)
 
+x1 = theta_r[0]/-theta_r[1]
+y1 = theta_r[0]/-theta_r[2]
+print x1, y1
+plt.plot(X[pos_indices, 0], X[pos_indices, 1], 'k+')
+plt.plot(X[neg_indices, 0], X[neg_indices, 1], 'yo')
+plt.plot([0, x1], [y1, 0], 'r')
+# plt.axis([0.3, 1, 0.3, 1])
+plt.show()
+
 #Plot Boundary
 u = np.linspace(-1, 1.5, 50)
 v = np.linspace(-1, 1.5, 50)
 z = np.zeros(shape=(len(u), len(v)))
 for i in range(len(u)):
     for j in range(len(v)):
-        z[i, j] = (map_feature(np.array(u[i]), np.array(v[j])).dot(np.array(theta_r)))
+        # z[i, j] = (map_feature(np.array(u[i]), np.array(v[j])).dot(np.array(theta_r)))
+        z[i, j] = np.array([1.0, u[i], v[j]]).dot(np.array(theta_r))
 
 z = z.T
 plt.contour(u, v, z)
