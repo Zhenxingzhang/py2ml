@@ -2,26 +2,26 @@ import math, numpy as np
 import matplotlib.pyplot as plt
 from pylab import scatter, show, title, xlabel, ylabel, plot, contour
 
-def sigmoid(x):
-    return 1.0 /(1.0 + math.exp(-1.0 * x))
-
-def predict(x, theta):
-    # return map(sigmoid, x.dot(theta))
-    return 1./(1.+np.exp(-(np.dot(x,theta))))
-
-def costFunction(X, y, theta, lamda):
-
-    m = y.size
-    predictions = predict(X, theta)
-
-    subtraction = np.ones((y.size), dtype=np.float)
-
-    cost_rows = -1.0 *(y * map(math.log, predictions)) - (1-y)* map(math.log, (1-predictions))
-
-    regularized = ( (theta[1:]**2).sum() * lamda) / (2.0*m)
-    print "regularization: ", regularized
-    return cost_rows.sum()/m + regularized
-    # return cost_rows.sum()/m
+# def sigmoid(x):
+#     return 1.0 /(1.0 + math.exp(-1.0 * x))
+#
+# def predict(x, theta):
+#     # return map(sigmoid, x.dot(theta))
+#     return 1./(1.+np.exp(-(np.dot(x,theta))))
+#
+# def costFunction(X, y, theta, lamda):
+#
+#     m = y.size
+#     predictions = predict(X, theta)
+#
+#     subtraction = np.ones((y.size), dtype=np.float)
+#
+#     cost_rows = -1.0 *(y * map(math.log, predictions)) - (1-y)* map(math.log, (1-predictions))
+#
+#     regularized = ( (theta[1:]**2).sum() * lamda) / (2.0*m)
+#     print "regularization: ", regularized
+#     return cost_rows.sum()/m + regularized
+#     # return cost_rows.sum()/m
 
 
 def hyp_log_r(X,theta):
@@ -108,35 +108,6 @@ def grad_descent(X, y, theta, alpha, lambd, n_iter):
 
     return theta, costs
 
-def gradient_descent(X, y, theta, alpha, lamda, iters):
-
-    m = y.size
-    J_history = np.zeros((iters ,1))
-
-    for iter in range(iters):
-
-        predictions = predict(X, theta)
-
-        errors = predictions - y
-
-        errors_sum_1 =alpha*(1.0 / m) * (errors*X[:, 0]).sum()
-
-        theta[0] = theta[0] - errors_sum_1
-
-        subtract_factor = np.zeros((theta.size-1,1), dtype=np.float)
-
-        for j in range(1, theta.size):
-            error = errors * X[:, j]
-            error_sum = error.sum()
-            subtract_factor[j-1][0] = alpha*(1.0/m)*(error_sum + lamda * theta[j])
-            # subtract_factor[j-1][0] = alpha*(1.0/m)*(error_sum)
-
-        theta[1:] = theta[1:] - subtract_factor
-
-        J_history[iter, 0] = costFunction(X, y, theta, lamda)
-
-    return theta, J_history
-
 def prediction( X, theta):
     '''Predict whether the label
     is 0 or 1 using learned logistic
@@ -144,7 +115,7 @@ def prediction( X, theta):
     m, n = X.shape
     p =np.zeros(shape=(m, 1))
 
-    h = predict(X, theta)
+    h = hyp_log_r(X, theta)
     print h
 
     for it in range(m):
@@ -202,7 +173,7 @@ plt.show()
 # input = map_feature(X[:, 0], X[:,1])
 
 input = np.ones((data.shape[0], 3), dtype=np.float)
-input[:,1:] = data[:,1:3]
+input[:,1:] = data[:,:2]
 
 dimension = 3
 theta = np.zeros((dimension,1), dtype=np.float)
@@ -237,11 +208,16 @@ print 'Train Accuracy: %f' % ((count / float(y.size)) * 100.0)
 x1 = theta_r[0]/-theta_r[1]
 y1 = theta_r[0]/-theta_r[2]
 print x1, y1
+
+#plot the training dataset
+pos_indices = [i for i, x in enumerate(p) if x == 1]
+neg_indices = [i for i, x in enumerate(p) if x == 0]
+
 plt.plot(X[pos_indices, 0], X[pos_indices, 1], 'k+')
 plt.plot(X[neg_indices, 0], X[neg_indices, 1], 'yo')
 plt.plot([0, x1], [y1, 0], 'r')
 # plt.axis([0.3, 1, 0.3, 1])
-plt.show()
+# plt.show()
 
 #Plot Boundary
 u = np.linspace(-1, 1.5, 50)
