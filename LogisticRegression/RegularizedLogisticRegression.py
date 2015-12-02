@@ -179,7 +179,7 @@ dimension = 3
 theta = np.zeros((dimension,1), dtype=np.float)
 
 iters = 1000
-alpha = 0.1
+alpha = 0.5
 lamda = 0
 #
 # theta_r, j_history = gradient_descent(input, y, theta, alpha, lamda, iters)
@@ -193,10 +193,10 @@ xlabel('Iterations')
 ylabel('Cost Function')
 show()
 
-
-
 #Compute accuracy on our training set
 p = prediction(input, theta_r)
+
+print p
 
 count = 0
 for idx in range(p.size):
@@ -208,6 +208,7 @@ print 'Train Accuracy: %f' % ((count / float(y.size)) * 100.0)
 x1 = theta_r[0]/-theta_r[1]
 y1 = theta_r[0]/-theta_r[2]
 print x1, y1
+# <<<<<<< HEAD
 
 #plot the training dataset
 pos_indices = [i for i, x in enumerate(p) if x == 1]
@@ -215,6 +216,10 @@ neg_indices = [i for i, x in enumerate(p) if x == 0]
 
 plt.plot(X[pos_indices, 0], X[pos_indices, 1], 'k+')
 plt.plot(X[neg_indices, 0], X[neg_indices, 1], 'yo')
+# =======
+# plt.plot(input[pos_indices, 0], input[pos_indices, 1], 'k+')
+# plt.plot(input[neg_indices, 0], input[neg_indices, 1], 'yo')
+# >>>>>>> 4d114f3e86c85e6b3f74e1088703f61eeb06f9e3
 plt.plot([0, x1], [y1, 0], 'r')
 # plt.axis([0.3, 1, 0.3, 1])
 # plt.show()
