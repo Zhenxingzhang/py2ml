@@ -22,7 +22,6 @@ X_digits = digits.data
 y_digits = digits.target
 print type(X_digits), X_digits.shape
 
-
 n_neighbors = 5
 alg = neighbors.KNeighborsClassifier(n_neighbors, weights="distance")
 
