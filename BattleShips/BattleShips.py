@@ -142,6 +142,10 @@ def move_ship(field, ship, direction):
     place_ship(field, ship)
 
 def fire_shot(field, positionX, positionY):
+    if positionX < 1 or positionX > field_size or positionY < 1 or positionY > field_size :
+        print "Problem: The location (%2d, %2d) is not in the field, could not fire the shot: "%(positionX, positionY)
+        return False
+    
     print ""
 
 def print_field(field):
