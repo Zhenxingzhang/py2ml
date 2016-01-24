@@ -1,6 +1,4 @@
 import numpy as np
-import sys
-
 
 ship_B = ["B", "B", "B", "B"]
 ship_C = ["C", "C", "C"]
@@ -20,8 +18,8 @@ class Ship:
         self.positionY = py
         self.direction = direction
 
-playerA_ships = [Ship(ship_B, 4, 2, 2, "right"), Ship(ship_C, 3, 4, 2, "down"), Ship(ship_C, 3, 4, 5, "right"), Ship(ship_D, 2, 6, 4, "right"), Ship(ship_D, 2, 1, 7, "down"), Ship(ship_D, 2, 8, 7, "right")]
-playerB_ships = [Ship(ship_b, 4, 7, 12, "down"), Ship(ship_c, 3, 2, 13, "right"), Ship(ship_c, 3, 12, 12, "right"), Ship(ship_d, 2, 16, 9, "right"), Ship(ship_f, 1, 4, 11, "down"), Ship(ship_f, 1, 5, 15, "right")]
+playerA_ships = [Ship(ship_B, 4, 2, 2, "horizontal"), Ship(ship_C, 3, 4, 2, "vertical"), Ship(ship_C, 3, 4, 5, "horizontal"), Ship(ship_D, 2, 6, 4, "horizontal"), Ship(ship_D, 2, 1, 7, "vertical"), Ship(ship_D, 2, 8, 7, "horizontal")]
+playerB_ships = [Ship(ship_b, 4, 7, 12, "vertical"), Ship(ship_c, 3, 2, 13, "horizontal"), Ship(ship_c, 3, 12, 12, "horizontal"), Ship(ship_d, 2, 16, 9, "horizontal"), Ship(ship_f, 1, 4, 11, "vertical"), Ship(ship_f, 1, 5, 15, "horizontal")]
 
 
 def initial_filed(field_size):
@@ -33,22 +31,11 @@ def initial_filed(field_size):
 
 def place_ship(field, ship):
     for l in range(ship.length):
-        if ship.direction == 'right':
+        if ship.direction == 'horizontal':
             px = ship.positionX
             py = ship.positionY+l
-            # field[ship.positionX][ship.positionY+l]=ship.flag
-            # Do the thing
-        elif ship.direction == 'left':
-            px = ship.positionX
-            py = ship.positionY-l
-            # field[ship.positionX][ship.positionY-l]=ship.flag
-            # Do the other thing
-        elif ship.direction == 'up':
-            px = ship.positionX-l
-            py = ship.positionY
-            # field[ship.positionX-l][ship.positionY]=ship.flag
 
-        elif ship.direction == 'down':
+        elif ship.direction == 'vertical':
             px = ship.positionX+l
             py = ship.positionY
 
@@ -61,22 +48,11 @@ def place_ship(field, ship):
 
 def remove_ship(field, ship):
     for l in range(ship.length):
-        if ship.direction == 'right':
+        if ship.direction == 'horizontal':
             px = ship.positionX
             py = ship.positionY+l
-            # field[ship.positionX][ship.positionY+l]=ship.flag
-            # Do the thing
-        elif ship.direction == 'left':
-            px = ship.positionX
-            py = ship.positionY-l
-            # field[ship.positionX][ship.positionY-l]=ship.flag
-            # Do the other thing
-        elif ship.direction == 'up':
-            px = ship.positionX-l
-            py = ship.positionY
-            # field[ship.positionX-l][ship.positionY]=ship.flag
 
-        elif ship.direction == 'down':
+        elif ship.direction == 'vertical':
             px = ship.positionX+l
             py = ship.positionY
 
@@ -100,50 +76,66 @@ def refresh_field(field):
 def move_ship(field, ship, direction):
     # if(ship.direction == "right" or ship.direction == "left"):
     # firstly, check the direction with ship direction
-    if (direction == 'right' or direction == 'left') and (ship.direction == 'up' or ship.direction == 'down'):
+    if (direction == 'right' or direction == 'left') and (ship.direction == 'vertical'):
         print "Problem: the ship can not move horizontally"
         return False
 
-    if (direction == 'up' or direction == 'down') and (ship.direction == 'left' or ship.direction == 'right'):
+    if (direction == 'up' or direction == 'down') and (ship.direction == 'horizontal'):
         print "Problem: the ship can not move vertically"
 
     if direction == 'right':
         xHead = ship.positionX
         yHead = ship.positionY+1
         xTail = ship.positionX
-        yTail = yHead + ship.length
+        yTail = yHead + ship.length-1
+
+        if field[xTail][yTail] != '-':
+            print "Problem: The location (%2d, %2d) is occupied, ship can not move to this location in field: "%(xTail,yTail)
+            return False
 
     elif direction == 'left':
         xHead = ship.positionX
         yHead = ship.positionY-1
         xTail = ship.positionX
-        yTail = yHead + ship.length
+        yTail = yHead + ship.length-1
+
+        if field[xHead][yHead] != '-':
+            print "Problem: The location (%2d, %2d) is occupied, ship can not move to this location in field: "%(xHead,yHead)
+            return False
 
     elif direction == 'up':
         xHead = ship.positionX-1
         yHead = ship.positionY
-        xTail = ship.positionX
-        yTail = yHead + ship.length
+        xTail = xHead + ship.length-1
+        yTail = yHead
+
+        if field[xHead][yHead] != '-':
+            print "Problem: The location (%2d, %2d) is occupied, ship can not move to this location in field: "%(xHead,yHead)
+            return False
+
 
     elif direction == 'down':
         xHead = ship.positionX+1
         yHead = ship.positionY
-        xTail = ship.positionX
-        yTail = yHead + ship.length
+        xTail = xHead + ship.length-1
+        yTail = yHead
+
+        if field[xTail][yTail] != '-':
+            print "Problem: The location (%2d, %2d) is occupied, ship can not move to this location in field: "%(xTail,yTail)
+            return False
 
     # validate the position in field
     if xHead < 1 or xTail > field_size or yHead < 1 or yTail > field_size:
         print "Problem: The ship will be outside of field, so the movement is denied."
         return False
 
+
+    # if field[xHead][yHead] != '-':
+    #     print "Problem: The location (%2d, %2d) is occupied, ship can not move to this location in field: "%(xHead,yHead)
+    #     # place_ship(field, ship)
+    #     # print_field(field)
+    #     return False
     remove_ship(field, ship)
-
-    if field[xHead][yHead] != '-' or field[xTail][yTail] != '-':
-        print "Problem: The location (%2d, %2d) is occupied, ship can not move to this location in field: "%(xHead,yHead)
-        place_ship(field, ship)
-        # print_field(field)
-        return False
-
     ship.positionX = xHead
     ship.positionY = yHead
     place_ship(field, ship)
@@ -171,38 +163,61 @@ def print_field(field):
         #         display_row[idx] = '-'
         print " ".join(display_row)
 
-field_size = 17
-field = initial_filed(field_size)
+if __name__ == "__main__":
+    field_size = 17
+    field = initial_filed(field_size)
 
-initial_ships(field, playerA_ships)
-initial_ships(field, playerB_ships)
-print_field(field)
+    initial_ships(field, playerA_ships)
+    initial_ships(field, playerB_ships)
+    # print_field(field)
+    print "Game Started: "
+    player_turn = 1
+    while True:
+        if player_turn % 2 != 0:
+            print "Player A"
+            print_field(field)
+        else:
+            print "Player B"
+            print_field(field)
+        user_command = raw_input("Move Ship(M) or Fire Shot(F) :")
+        if user_command == "M":
+            print "Move Ship: "
+            player_turn += 1
+        elif user_command == "F":
+            print "Fire Shot:"
+            guess_row = int(raw_input("Row:"))
+            guess_col = int(raw_input("Col:"))
 
-move_ship(field, playerA_ships[0], "left")
-# refresh_field(field)
-print_field(field)
+            fire_shot(field, guess_row, guess_col)
+            player_turn += 1
+        else:
+            print "Wrong command, try again."
 
-move_ship(field, playerA_ships[1], "up")
-# refresh_field(field)
-print_field(field)
-
-move_ship(field, playerA_ships[0], "right")
-print_field(field)
-
-move_ship(field, playerA_ships[1], "up")
-# refresh_field(field)
-print_field(field)
-
-fire_shot(field, 2, 1)
-print_field(field)
-
-move_ship(field, playerA_ships[0], "left")
-# refresh_field(field)
-print_field(field)
-
-fire_shot(field, 2, 1)
-print_field(field)
-
+# move_ship(field, playerA_ships[0], "left")
+# # refresh_field(field)
+# print_field(field)
+#
+# move_ship(field, playerA_ships[1], "up")
+# # refresh_field(field)
+# print_field(field)
+#
+# move_ship(field, playerA_ships[1], "up")
+# # refresh_field(field)
+# print_field(field)
+#
+# fire_shot(field, 2, 1)
+# print_field(field)
+#
+# move_ship(field, playerA_ships[0], "left")
+# # refresh_field(field)
+# print_field(field)
+#
+# fire_shot(field, 2, 1)
+# print_field(field)
+#
+# move_ship(field, playerA_ships[0], "right")
+# print_field(field)
+#
 # fire_shot(field, 7, 11)
 # print_field(field)
 #
