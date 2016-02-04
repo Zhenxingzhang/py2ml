@@ -2,19 +2,17 @@ import numpy as np
 import math
 import gmplot
 from scipy import stats
+from scipy import optimize
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-from vectors import *
 
 SW_lat = 52.464011 #(Latitude)
 SW_lon = 13.274099 #(Longitude)
 EARTH_RADIUS = 6371000 #Earth radius in meter
 
-GATE_GPS = [ 52.516288, 13.377689]
+GATE_GPS = [52.516288, 13.377689]
 
-
-BERLIN_LAT = 52.5167
-BERLIN_LON = 13.3833
+BERLIN_GPS =[ 52.5167, 13.3833]
 
 #The spree river could be represented with line segments between the following coordinates
 SPREE_GPS = [
@@ -41,27 +39,52 @@ SPREE_GPS = [
 
 SATELLITE_START_GPS = [52.590117, 13.39915]
 SATELLITE_END_GPS = [52.437385, 13.553989]
-def coordinate_conversion(P_lat, P_lon):
-    """
-    Args:
-        P_lat:
-        P_lon:
 
-    Returns:
-        A point in XY coordinate.
 
-    """
+def gps_2_xy(P_lat, P_lon):
     P_x = (P_lon - SW_lon) * math.cos(SW_lat * math.pi / 180) * 111.323
     P_y = (P_lat - SW_lat) * 111.323
 
     return P_x, P_y
 
-def gaussian_distribution(x, mu, sig):
-    return 1./(math.sqrt(2.*math.pi)*sig)*np.exp(-np.power(x - mu, 2.) / (2 * np.power(sig, 2.)))
 
-def lognormal_distribution(x, mean, mode):
-    return True
+def xy_2_gps(x, y):
 
+    P_lon= + SW_lon - x /(111.323 * math.cos(SW_lat))
+    P_lat= (y / 111.323) + SW_lat
+
+    return round(P_lat, 6),round(P_lon, 6)
+
+def dot(v,w):
+    x,y,z = v
+    X,Y,Z = w
+    return x*X + y*Y + z*Z
+
+def length(v):
+    x,y,z = v
+    return math.sqrt(x*x + y*y + z*z)
+
+def vector(b,e):
+    x,y,z = b
+    X,Y,Z = e
+    return (X-x, Y-y, Z-z)
+
+def unit(v):
+    x,y,z = v
+    mag = length(v)
+    return (x/mag, y/mag, z/mag)
+
+def distance(p0,p1):
+    return length(vector(p0,p1))
+
+def scale(v,sc):
+    x,y,z = v
+    return (x * sc, y * sc, z * sc)
+
+def add(v,w):
+    x,y,z = v
+    X,Y,Z = w
+    return (x+X, y+Y, z+Z)
 
 def distance_to_linesegment(pnt, start, end):
     """
@@ -86,10 +109,10 @@ def distance_to_linesegment(pnt, start, end):
     return dist
 
 
-def spree_distribution(x,y, mean= 0.0, sigma = 1.0):
+def spree_distribution(x,y, mean= 0.0, sigma = 2.73 / 1.96):
     SPREE_coords = []
     for GPS_coord in SPREE_GPS:
-        P_x, P_y = coordinate_conversion(GPS_coord[0], GPS_coord[1])
+        P_x, P_y = gps_2_xy(GPS_coord[0], GPS_coord[1])
         SPREE_coords.append([P_x, P_y, 0])
     distances = []
     idx = 0
@@ -102,16 +125,16 @@ def spree_distribution(x,y, mean= 0.0, sigma = 1.0):
 
 
 def gate_distribution(x, y, mean = 4.7, mode = 3.877):
-    GATE_coord = coordinate_conversion(GATE_GPS[0], GATE_GPS[1])
+    GATE_coord = gps_2_xy(GATE_GPS[0], GATE_GPS[1])
     shortest_distance = length(vector([GATE_coord[0], GATE_coord[1],0], [x, y, 0]))
     theta = math.sqrt(2 * math.log(mean/mode)/3)
     sigma = (2 * math.log(mean) + math.log(mode))/3
     return stats.lognorm(s=theta, scale=math.exp(sigma)).pdf(shortest_distance)
 
 
-def satellite_distribution(x, y, mean=0.0, sigma=1.0):
-    start_coord = coordinate_conversion(SATELLITE_START_GPS[0], SATELLITE_START_GPS[1])
-    end_coord = coordinate_conversion(SATELLITE_END_GPS[0], SATELLITE_END_GPS[1])
+def satellite_distribution(x, y, mean= 0.0, sigma= 2.4 / 1.96):
+    start_coord = gps_2_xy(SATELLITE_START_GPS[0], SATELLITE_START_GPS[1])
+    end_coord = gps_2_xy(SATELLITE_END_GPS[0], SATELLITE_END_GPS[1])
 
     shortest_distance = distance_to_linesegment([x,y,0], [start_coord[0], start_coord[1], 0], [end_coord[0], end_coord[1], 0])
     return stats.norm(mean, sigma).pdf(shortest_distance)
@@ -124,40 +147,43 @@ def convert_spree(spree_coords):
 
     XY_coords = []
     for GPS_coord in spree_coords:
-        P_x, P_y = coordinate_conversion(GPS_coord[0], GPS_coord[1])
+        P_x, P_y = gps_2_xy(GPS_coord[0], GPS_coord[1])
         XY_coords.append([P_x, P_y])
 
     return XY_coords
 
-def draw_2D_plot(pdf):
+def draw_2D_plot(pdf, peak_points = []):
     # display predicted scores by the model as a contour plot
-    x = np.linspace(0.0, 20.0)
-    y = np.linspace(0.0, 12.0)
+    x = np.linspace(0.0, 20.0, 100)
+    y = np.linspace(0.0, 15.0, 75)
     X, Y = np.meshgrid(x, y)
     XX = np.array([X.ravel(), Y.ravel()]).T
 
-    probs = np.zeros(2500)
+    probs = np.zeros(7500)
 
     idx=0
     for point in XX:
         probs[idx] = pdf(point[0], point[1])
         idx = idx+1
 
-    probs = probs.reshape((50, 50));
+    probs = probs.reshape((75, 100));
 
     CS = plt.contour(X, Y, probs);
     CB = plt.colorbar(CS, shrink=0.8, extend='both')
 
     spree_coords = convert_spree(SPREE_GPS)
     spree_coords = np.asarray(spree_coords)
-    plt.plot(spree_coords[:, 0], spree_coords[:, 1], 'ro')
+    plt.plot(spree_coords[:, 0], spree_coords[:, 1], '-.')
 
-    GATE_coord = coordinate_conversion(GATE_GPS[0], GATE_GPS[1])
+    GATE_coord = gps_2_xy(GATE_GPS[0], GATE_GPS[1])
     plt.plot(GATE_coord[0], GATE_coord[1], 'gD')
 
-    start_coord = coordinate_conversion(SATELLITE_START_GPS[0], SATELLITE_START_GPS[1])
-    end_coord = coordinate_conversion(SATELLITE_END_GPS[0], SATELLITE_END_GPS[1])
+    start_coord = gps_2_xy(SATELLITE_START_GPS[0], SATELLITE_START_GPS[1])
+    end_coord = gps_2_xy(SATELLITE_END_GPS[0], SATELLITE_END_GPS[1])
     plt.plot([start_coord[0], start_coord[1]], [end_coord[0], end_coord[1]], color='y', ls='--', lw=1)
+
+    for peak_point in peak_points:
+        plt.plot(peak_point[0], peak_point[1], 'ro')
 
     plt.axis([-1, 20, -1, 10])
 
@@ -187,10 +213,37 @@ def draw_3D_plot(pdf):
     ax.plot_wireframe(X, Y, probs)
     plt.show()
 
+
+def draw_on_google_map(map_center, peak_coords):
+
+    gmap = gmplot.GoogleMapPlotter(map_center[0], map_center[1], 13)
+
+    peak_coords = np.asarray(peak_coords);
+    # gmap.scatter(peak_coords[:,0], peak_coords[:,1], '#3B0B39', size=40, marker=False)
+    # gmap.scatter(peak_coords[:,0], peak_coords[:,1], '#000000', size=400, marker=True)
+    gmap.heatmap(peak_coords[:,0], peak_coords[:,1], radius=100, opacity=0.5, gradient=[(50,50,50,0), (255,0,0,1), (255, 0, 0, 1)])
+
+    gmap.draw("mymap.html")
+
+
+def objective_function(x):
+     return -mixture_distribution(x[0],x[1])
+
 if __name__ == "__main__":
 
-    draw_2D_plot(mixture_distribution)
+    # draw_2D_plot(mixture_distribution)
 
     # draw_3D_plot(spree_distribution)
     # draw_3D_plot(satellite_distribution)
     # draw_3D_plot(mixture_distribution)
+
+    peak_point1 = optimize.minimize(objective_function, [15.02, 2.86], method='Nelder-Mead').x
+    peak_point2 = optimize.minimize(objective_function, [3.12, 6.52], method='Nelder-Mead').x
+    peak_point3 = optimize.minimize(objective_function, [11.50, 5.4], method='Nelder-Mead').x
+
+    peak_points = [peak_point1, peak_point2, peak_point3]
+
+    peak_coords = [xy_2_gps(peak_point1[0],peak_point1[1]), xy_2_gps(peak_point2[0], peak_point2[1]), xy_2_gps(peak_point3[0], peak_point3[1])]
+    draw_on_google_map(BERLIN_GPS, peak_coords)
+
+    draw_2D_plot(mixture_distribution, peak_points)
