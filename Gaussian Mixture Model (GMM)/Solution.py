@@ -1,7 +1,7 @@
 import numpy as np
 import math
 import gmplot
-import scipy
+from scipy import stats
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from vectors import *
@@ -10,7 +10,7 @@ SW_lat = 52.464011 #(Latitude)
 SW_lon = 13.274099 #(Longitude)
 EARTH_RADIUS = 6371000 #Earth radius in meter
 
-BRANDENBURG_GATE_GPS = [ 52.516288, 13.377689]
+GATE_GPS = [ 52.516288, 13.377689]
 
 
 BERLIN_LAT = 52.5167
@@ -39,6 +39,8 @@ SPREE_GPS = [
     [52.488739,13.491456],
     [52.464011,13.503386]]
 
+SATELLITE_START_GPS = [52.590117, 13.39915]
+SATELLITE_END_GPS = [52.437385, 13.553989]
 def coordinate_conversion(P_lat, P_lon):
     """
     Args:
@@ -59,6 +61,7 @@ def gaussian_distribution(x, mu, sig):
 
 def lognormal_distribution(x, mean, mode):
     return True
+
 
 def distance_to_linesegment(pnt, start, end):
     """
@@ -82,7 +85,8 @@ def distance_to_linesegment(pnt, start, end):
     dist = distance(nearest, pnt_vec)
     return dist
 
-def spree_distribution(x,y, mean= 0.0, sigma = 1.5):
+
+def spree_distribution(x,y, mean= 0.0, sigma = 1.0):
     SPREE_coords = []
     for GPS_coord in SPREE_GPS:
         P_x, P_y = coordinate_conversion(GPS_coord[0], GPS_coord[1])
@@ -94,12 +98,27 @@ def spree_distribution(x,y, mean= 0.0, sigma = 1.5):
         end_point = SPREE_coords[idx+1]
         distances.append(distance_to_linesegment([x,y,0], start_point, end_point))
     shortest_distance = min(distances)
-    return scipy.stats.norm(mean, sigma).pdf(shortest_distance)
+    return stats.norm(mean, sigma).pdf(shortest_distance)
 
-def brandenburg_gate_distribution(x, y):
-    BRANDENBURG_GATE_coord = coordinate_conversion(BRANDENBURG_GATE_GPS[0], BRANDENBURG_GATE_GPS[1])
-    shortest_distance = length(vector([BRANDENBURG_GATE_coord[0], BRANDENBURG_GATE_coord[1],0], [x, y, 0]))
 
+def gate_distribution(x, y, mean = 4.7, mode = 3.877):
+    GATE_coord = coordinate_conversion(GATE_GPS[0], GATE_GPS[1])
+    shortest_distance = length(vector([GATE_coord[0], GATE_coord[1],0], [x, y, 0]))
+    theta = math.sqrt(2 * math.log(mean/mode)/3)
+    sigma = (2 * math.log(mean) + math.log(mode))/3
+    return stats.lognorm(s=theta, scale=math.exp(sigma)).pdf(shortest_distance)
+
+
+def satellite_distribution(x, y, mean=0.0, sigma=1.0):
+    start_coord = coordinate_conversion(SATELLITE_START_GPS[0], SATELLITE_START_GPS[1])
+    end_coord = coordinate_conversion(SATELLITE_END_GPS[0], SATELLITE_END_GPS[1])
+
+    shortest_distance = distance_to_linesegment([x,y,0], [start_coord[0], start_coord[1], 0], [end_coord[0], end_coord[1], 0])
+    return stats.norm(mean, sigma).pdf(shortest_distance)
+
+
+def mixture_distribution(x, y):
+    return 1.0/3 * spree_distribution(x, y) + 1.0/3 * gate_distribution(x, y) + 1.0/3 * satellite_distribution(x, y)
 
 def convert_spree(spree_coords):
 
@@ -132,6 +151,14 @@ def draw_2D_plot(pdf):
     spree_coords = convert_spree(SPREE_GPS)
     spree_coords = np.asarray(spree_coords)
     plt.plot(spree_coords[:, 0], spree_coords[:, 1], 'ro')
+
+    GATE_coord = coordinate_conversion(GATE_GPS[0], GATE_GPS[1])
+    plt.plot(GATE_coord[0], GATE_coord[1], 'gD')
+
+    start_coord = coordinate_conversion(SATELLITE_START_GPS[0], SATELLITE_START_GPS[1])
+    end_coord = coordinate_conversion(SATELLITE_END_GPS[0], SATELLITE_END_GPS[1])
+    plt.plot([start_coord[0], start_coord[1]], [end_coord[0], end_coord[1]], color='y', ls='--', lw=1)
+
     plt.axis([-1, 20, -1, 10])
 
     plt.title('PDF')
@@ -161,10 +188,9 @@ def draw_3D_plot(pdf):
     plt.show()
 
 if __name__ == "__main__":
-    # spree_coords = convert_spree(SPREE_GPS)
-    # spree_coords = np.asarray(spree_coords)
-    # plt.plot(spree_coords[:, 0], spree_coords[:, 1], 'ro')
-    # plt.axis([-1, 20, -1, 10])
-    # plt.show()
 
-    draw_3D_plot(spree_distribution)
+    draw_2D_plot(mixture_distribution)
+
+    # draw_3D_plot(spree_distribution)
+    # draw_3D_plot(satellite_distribution)
+    # draw_3D_plot(mixture_distribution)
