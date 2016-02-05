@@ -110,42 +110,57 @@ def distance_to_linesegment(pnt, start, end):
     dist = distance(nearest, pnt_vec)
     return round(dist,6)
 
-def arc_length(degree, radius):
-    '''
-    length= degree * pi * radius / 180
-    '''
-    length = degree * math.pi * radius / 180
-    return length
+def distance_ratio(radius):
 
-def spree_distribution(x,y, mean= 0.0, sigma = 2.73 / 1.96):
-    SPREE_coords = []
+    degree = 1
+    arc_length = degree * math.pi * radius / 180.0
+    x, y = gps_2_xy(SW_lat+degree, SW_lon)
+
+    return round(arc_length/y, 3)
+
+def spree_distribution(x,y):
+    mu = 0.0
+    sigma = (2730/distance_ratio(EARTH_RADIUS)) / 1.959963
+
+    spree_coords = []
     for GPS_coord in SPREE_GPS:
         P_x, P_y = gps_2_xy(GPS_coord[0], GPS_coord[1])
-        SPREE_coords.append([P_x, P_y, 0])
+        spree_coords.append([P_x, P_y, 0])
     distances = []
-    idx = 0
-    for idx in range(len(SPREE_coords)-1):
-        start_point = SPREE_coords[idx]
-        end_point = SPREE_coords[idx+1]
+
+    for idx in range(len(spree_coords)-1):
+        start_point = spree_coords[idx]
+        end_point = spree_coords[idx+1]
         distances.append(distance_to_linesegment([x,y,0], start_point, end_point))
     shortest_distance = min(distances)
-    return stats.norm(mean, sigma).pdf(shortest_distance)
+    return stats.norm.pdf(shortest_distance, loc = mu, scale = sigma)
 
 
-def gate_distribution(x, y, mean = 4.7, mode = 3.877):
+def gate_distribution(x, y):
+    mean = 4700 / distance_ratio(EARTH_RADIUS)
+    mode = 3877 /distance_ratio(EARTH_RADIUS)
+
     GATE_coord = gps_2_xy(GATE_GPS[0], GATE_GPS[1])
     shortest_distance = length(vector([GATE_coord[0], GATE_coord[1],0], [x, y, 0]))
-    theta = math.sqrt(2 * math.log(mean/mode)/3)
-    sigma = (2 * math.log(mean) + math.log(mode))/3
-    return stats.lognorm(s=theta, scale=math.exp(sigma)).pdf(shortest_distance)
+
+    mu = (2.0 * math.log(mean) + math.log(mode))/3
+    sigma = math.sqrt((math.log(mean)-math.log(mode)) * 2.0 /3)
+
+    return stats.lognorm.pdf(shortest_distance, s=sigma, loc=0, scale=math.exp(mu))
 
 
-def satellite_distribution(x, y, mean= 0.0, sigma= 2.4 / 1.96):
-    start_coord = gps_2_xy(SATELLITE_START_GPS[0], SATELLITE_START_GPS[1])
-    end_coord = gps_2_xy(SATELLITE_END_GPS[0], SATELLITE_END_GPS[1])
+def satellite_distribution(x, y):
+    mu= 0.0
+    sigma= (2400 / distance_ratio(EARTH_RADIUS)) * 1.959963
+
+    # start_coord = gps_2_xy(SATELLITE_START_GPS[0], SATELLITE_START_GPS[1])
+    # end_coord = gps_2_xy(SATELLITE_END_GPS[0], SATELLITE_END_GPS[1])
+
+    start_coord = [15.0, 0.0]
+    end_coord = [0.0, 15.0]
 
     shortest_distance = distance_to_linesegment([x,y,0], [start_coord[0], start_coord[1], 0], [end_coord[0], end_coord[1], 0])
-    return stats.norm(mean, sigma).pdf(shortest_distance)
+    return stats.norm.pdf(shortest_distance, loc = mu, scale = sigma)
 
 
 def mixture_distribution(x, y):
@@ -253,17 +268,16 @@ def draw_on_google_map(map_center, peak_coords):
 
 if __name__ == "__main__":
 
-    real_length= arc_length(1, EARTH_RADIUS)
+    # print distance_ratio(EARTH_RADIUS)
 
-    x, y = gps_2_xy(SW_lat, SW_lon+1)
-
-    print real_length/x
-
-    # draw_2D_plot(spree_distribution)
+    draw_2D_plot(spree_distribution)
     # draw_2D_plot(gate_distribution)
-    # draw_2D_plot(satellite_distribution)
+    draw_2D_plot(satellite_distribution)
     # draw_2D_plot(mixture_distribution)
-    #
+
+    # draw_3D_plot(gate_distribution)
+
+
     # draw_3D_plot(mixture_distribution)
     #
     # peak_points, peak_coords = find_maxima()
