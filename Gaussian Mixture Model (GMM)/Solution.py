@@ -5,6 +5,8 @@ from scipy import stats
 from scipy import optimize
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+from matplotlib import cm
+from matplotlib.ticker import LinearLocator, FormatStrFormatter
 
 SW_lat = 52.464011 #(Latitude)
 SW_lon = 13.274099 #(Longitude)
@@ -106,8 +108,14 @@ def distance_to_linesegment(pnt, start, end):
         t = 1.0
     nearest = scale(line_vec, t)
     dist = distance(nearest, pnt_vec)
-    return dist
+    return round(dist,6)
 
+def arc_length(degree, radius):
+    '''
+    length= degree * pi * radius / 180
+    '''
+    length = degree * math.pi * radius / 180
+    return length
 
 def spree_distribution(x,y, mean= 0.0, sigma = 2.73 / 1.96):
     SPREE_coords = []
@@ -143,6 +151,10 @@ def satellite_distribution(x, y, mean= 0.0, sigma= 2.4 / 1.96):
 def mixture_distribution(x, y):
     return 1.0/3 * spree_distribution(x, y) + 1.0/3 * gate_distribution(x, y) + 1.0/3 * satellite_distribution(x, y)
 
+
+def objective_function(x):
+     return -mixture_distribution(x[0],x[1])
+
 def convert_spree(spree_coords):
 
     XY_coords = []
@@ -152,23 +164,42 @@ def convert_spree(spree_coords):
 
     return XY_coords
 
-def draw_2D_plot(pdf, peak_points = []):
-    # display predicted scores by the model as a contour plot
-    x = np.linspace(0.0, 20.0, 100)
-    y = np.linspace(0.0, 15.0, 75)
+def pds_in_grid(pdf):
+    x = np.linspace(0.0, 20.0, num=100)
+    y = np.linspace(0.0, 12.0, num=75)
     X, Y = np.meshgrid(x, y)
-    XX = np.array([X.ravel(), Y.ravel()]).T
+    XY = np.array([X.ravel(), Y.ravel()]).T
 
-    probs = np.zeros(7500)
+    pds = np.zeros(7500)
 
     idx=0
-    for point in XX:
-        probs[idx] = pdf(point[0], point[1])
+    for point in XY:
+        pds[idx] = pdf(point[0], point[1])
         idx = idx+1
 
-    probs = probs.reshape((75, 100));
+    pds = pds.reshape((75, 100))
+    return X,Y,pds
 
-    CS = plt.contour(X, Y, probs);
+
+def find_maxima():
+    peak_point1 = optimize.minimize(objective_function, [15.02, 2.86], method='Nelder-Mead').x
+    peak_point2 = optimize.minimize(objective_function, [3.12, 6.52], method='Nelder-Mead').x
+    peak_point3 = optimize.minimize(objective_function, [11.50, 5.4], method='Nelder-Mead').x
+
+    peak_points = [peak_point1, peak_point2, peak_point3]
+
+    peak_coords = [xy_2_gps(peak_point1[0],peak_point1[1]),
+                   xy_2_gps(peak_point2[0], peak_point2[1]),
+                   xy_2_gps(peak_point3[0], peak_point3[1])]
+
+    return peak_points, peak_coords
+
+
+def draw_2D_plot(pdf, peak_points = []):
+
+    X,Y,pds = pds_in_grid(pdf)
+
+    CS = plt.contour(X, Y, pds)
     CB = plt.colorbar(CS, shrink=0.8, extend='both')
 
     spree_coords = convert_spree(SPREE_GPS)
@@ -192,25 +223,20 @@ def draw_2D_plot(pdf, peak_points = []):
     plt.show()
 
 def draw_3D_plot(pdf):
-    # display predicted scores by the model as a contour plot
-    x = np.linspace(0.0, 20.0, num=100)
-    y = np.linspace(0.0, 12.0, num=100)
-    X, Y = np.meshgrid(x, y)
-    XX = np.array([X.ravel(), Y.ravel()]).T
 
-    probs = np.zeros(10000)
-
-    idx=0
-    for point in XX:
-        probs[idx] = pdf(point[0], point[1])
-        idx = idx+1
-
-    probs = probs.reshape((100, 100));
+    X,Y,pds = pds_in_grid(pdf)
 
     fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
+    ax = fig.gca(projection='3d')
+    surf = ax.plot_surface(X, Y, pds, rstride=1, cstride=1, cmap=cm.coolwarm,
+                           linewidth=0, antialiased=False)
+    ax.set_zlim(0, 0.50)
 
-    ax.plot_wireframe(X, Y, probs)
+    ax.zaxis.set_major_locator(LinearLocator(10))
+    ax.zaxis.set_major_formatter(FormatStrFormatter('%.02f'))
+
+    fig.colorbar(surf, shrink=0.5, aspect=5)
+
     plt.show()
 
 
@@ -221,29 +247,30 @@ def draw_on_google_map(map_center, peak_coords):
     peak_coords = np.asarray(peak_coords);
     # gmap.scatter(peak_coords[:,0], peak_coords[:,1], '#3B0B39', size=40, marker=False)
     # gmap.scatter(peak_coords[:,0], peak_coords[:,1], '#000000', size=400, marker=True)
-    gmap.heatmap(peak_coords[:,0], peak_coords[:,1], radius=100, opacity=0.5, gradient=[(50,50,50,0), (255,0,0,1), (255, 0, 0, 1)])
+    gmap.heatmap(peak_coords[:,0], peak_coords[:,1], radius=20, opacity=0.5, gradient=[(50,50,50,0), (255,0,0,1), (255, 0, 0, 1)])
 
-    gmap.draw("mymap.html")
-
-
-def objective_function(x):
-     return -mixture_distribution(x[0],x[1])
+    gmap.draw("easy_to_read_map.html")
 
 if __name__ == "__main__":
 
+    real_length= arc_length(1, EARTH_RADIUS)
+
+    x, y = gps_2_xy(SW_lat, SW_lon+1)
+
+    print real_length/x
+
+    # draw_2D_plot(spree_distribution)
+    # draw_2D_plot(gate_distribution)
+    # draw_2D_plot(satellite_distribution)
     # draw_2D_plot(mixture_distribution)
-
-    # draw_3D_plot(spree_distribution)
-    # draw_3D_plot(satellite_distribution)
+    #
     # draw_3D_plot(mixture_distribution)
-
-    peak_point1 = optimize.minimize(objective_function, [15.02, 2.86], method='Nelder-Mead').x
-    peak_point2 = optimize.minimize(objective_function, [3.12, 6.52], method='Nelder-Mead').x
-    peak_point3 = optimize.minimize(objective_function, [11.50, 5.4], method='Nelder-Mead').x
-
-    peak_points = [peak_point1, peak_point2, peak_point3]
-
-    peak_coords = [xy_2_gps(peak_point1[0],peak_point1[1]), xy_2_gps(peak_point2[0], peak_point2[1]), xy_2_gps(peak_point3[0], peak_point3[1])]
-    draw_on_google_map(BERLIN_GPS, peak_coords)
-
-    draw_2D_plot(mixture_distribution, peak_points)
+    #
+    # peak_points, peak_coords = find_maxima()
+    # draw_2D_plot(mixture_distribution, peak_points)
+    #
+    # draw_on_google_map(BERLIN_GPS, peak_coords)
+    #
+    # print "System Output: "
+    # print "The three GPS coordinates: "
+    # print peak_coords
