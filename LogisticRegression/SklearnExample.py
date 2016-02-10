@@ -17,6 +17,8 @@ def render_exams(data, admitted, rejected):
     plt.xlabel('Exam 1 score');
     plt.ylabel('Exam 2 score');
     plt.axes().set_aspect('equal', 'datalim')
+    plt.legend();
+
 
 def map_features(f1, f2, order=1):
     '''map the f1 and f2 to its higher order polynomial'''
@@ -33,7 +35,12 @@ data = np.loadtxt('../Data/ex2data1.txt', delimiter=',')
 X = data[:, :2]/100.0
 y = data[:, 2]
 
-X =map_features(X[:,0], X[:,1], order=2).T
+admitted = [i for i, x in enumerate(y) if x == 1]
+rejected = [i for i, x in enumerate(y) if x == 0]
+
+render_exams(data, admitted, rejected)
+
+# X =map_features(X[:,0], X[:,1], order=2).T
 # Initialize our algorithm class
 alg = LogisticRegression(random_state=1, penalty='l1')
 
@@ -57,11 +64,6 @@ intercept = alg.intercept_
 ex1 = np.linspace(-1, 1.5, 10)
 ex2 = -(coef[:, 0] * ex1 + intercept[0]) / coef[:,1]
 
-
-admitted = [i for i, x in enumerate(y) if x == 1]
-rejected = [i for i, x in enumerate(y) if x == 0]
-
 render_exams(X, admitted, rejected)
 plt.plot(ex1, ex2, color='r', label='decision boundary');
-plt.legend();
 plt.show()
