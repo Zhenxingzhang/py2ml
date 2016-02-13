@@ -74,9 +74,10 @@ rejected = [i for i, x in enumerate(y) if x == 0]
 
 # render_exams(data, admitted, rejected)
 
+# X_ = X
 X_ = map_features(X[:,0], X[:,1], order=10).T
 # Initialize our algorithm class
-alg = LogisticRegression(random_state=1, penalty='l2', C=1000000, max_iter=10000)
+alg = LogisticRegression(random_state=1, penalty='l2', C=1000, max_iter=1000)
 
 alg.fit(X_, y)
 print 'Coefficents: ', alg.coef_
