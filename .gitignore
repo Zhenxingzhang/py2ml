@@ -39,3 +39,5 @@ Thumbs.db
 large_data/*
 
 .ipynb_checkpoints
+*.pkl
+*.npy
