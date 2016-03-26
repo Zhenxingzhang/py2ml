@@ -73,7 +73,7 @@ n_classes = target_names.shape[0]
 
 print("Total dataset size:")
 print("n_samples: %d" % n_samples)
-print("n_features: %d" % n_features)
+print("n_features: %d, image_size(%d,%d)" % (n_features, h, w))
 print("n_classes: %d" % n_classes)
 
 ###############################################################################
