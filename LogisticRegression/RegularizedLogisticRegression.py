@@ -30,12 +30,12 @@ def hyp_log_r(X,theta):
     Takes dataset 'X' and parameter vector 'theta' and
     returns logistic regression hypothesis/model.
 
-    >>> theta=np.array([[1],[2],[3]])
-    >>> X=np.array([[ 1.,  0.,  0.],\
-                    [ 0.,  1.,  0.],\
-                    [ 0.,  0.,  1.]])
-    >>> theta=np.array([[1.],[-1.],[0.]])
-    >>> hyp_log_r(X,theta)
+    # >>> theta=np.array([[1],[2],[3]])
+    # >>> X=np.array([[ 1.,  0.,  0.],\
+    #                 [ 0.,  1.,  0.],\
+    #                 [ 0.,  0.,  1.]])
+    # >>> theta=np.array([[1.],[-1.],[0.]])
+    # >>> hyp_log_r(X,theta)
     array([[ 0.73105858],
            [ 0.26894142],
            [ 0.5       ]])
@@ -50,11 +50,11 @@ def cost(h,y,theta,lambd):
     parameter vector 'theta' and regularization parameter number 'lambd'
     and returns the logistic regression cost function.
 
-    >>> h=np.array([[.5],[1.],[0.]])
-    >>> y=np.array([[1.],[1.],[0.]])
-    >>> theta=np.array([[1.],[1.],[0.]])
-    >>> lambd=0
-    >>> cost(h,y,theta,lambd)
+    # >>> h=np.array([[.5],[1.],[0.]])
+    # >>> y=np.array([[1.],[1.],[0.]])
+    # >>> theta=np.array([[1.],[1.],[0.]])
+    # >>> lambd=0
+    # >>> cost(h,y,theta,lambd)
     0.23774928408898272
 
     """
@@ -196,8 +196,6 @@ show()
 #Compute accuracy on our training set
 p = prediction(input, theta_r)
 
-print p
-
 count = 0
 for idx in range(p.size):
     if p[idx] == y[idx]:
@@ -208,11 +206,6 @@ print 'Train Accuracy: %f' % ((count / float(y.size)) * 100.0)
 x1 = theta_r[0]/-theta_r[1]
 y1 = theta_r[0]/-theta_r[2]
 print x1, y1
-# <<<<<<< HEAD
-
-#plot the training dataset
-pos_indices = [i for i, x in enumerate(p) if x == 1]
-neg_indices = [i for i, x in enumerate(p) if x == 0]
 
 plt.plot(X[pos_indices, 0], X[pos_indices, 1], 'k+')
 plt.plot(X[neg_indices, 0], X[neg_indices, 1], 'yo')

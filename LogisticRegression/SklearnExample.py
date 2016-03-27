@@ -20,7 +20,7 @@ def render_exams(data, admitted, rejected):
     plt.legend();
 
 
-def map_features(f1, f2, order=1):
+def map_features(f1, f2, order=10):
     '''map the f1 and f2 to its higher order polynomial'''
     assert order >= 1
     def iter():
@@ -34,7 +34,7 @@ def draw_decision_boundary(model, data, admitted, rejected):
     xx, yy = np.mgrid[-0.8: 1.1: .01, -0.8: 1.1: .01]
     grid = np.c_[xx.ravel(), yy.ravel()]
 
-    grid = map_features(grid[:, 0], grid[:, 1], order=10).T
+    grid = map_features(grid[:, 0], grid[:, 1]).T
 
     probs = model.predict_proba(grid)[:, 1].reshape(xx.shape)
 
@@ -75,7 +75,7 @@ rejected = [i for i, x in enumerate(y) if x == 0]
 # render_exams(data, admitted, rejected)
 
 # X_ = X
-X_ = map_features(X[:,0], X[:,1], order=10).T
+X_ = map_features(X[:,0], X[:,1]).T
 # Initialize our algorithm class
 alg = LogisticRegression(random_state=1, penalty='l2', C=1000, max_iter=1000)
 
