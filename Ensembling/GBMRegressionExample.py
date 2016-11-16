@@ -2,8 +2,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.cross_validation import train_test_split
 from sklearn.ensemble import GradientBoostingRegressor
+from sklearn.metrics import mean_squared_error
+from sklearn.tree import DecisionTreeRegressor
 
 FIGSIZE = (11, 7)
+
+x_plot = np.linspace(0, 10, 500)
 
 def ground_truth(x):
     """Ground truth -- function to approximate"""
@@ -12,28 +16,25 @@ def ground_truth(x):
 def gen_data(n_samples=200):
     """generate training and testing data"""
     np.random.seed(15)
-    X = np.random.uniform(0, 10, size=n_samples)[:, np.newaxis]
-    y = ground_truth(X.ravel()) + np.random.normal(scale=2, size=n_samples)
-    train_mask = np.random.randint(0, 2, size=n_samples).astype(np.bool)
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=3)
-    return X_train, X_test, y_train, y_test
+    x_ = np.random.uniform(0, 10, size=n_samples)[:, np.newaxis]
+    print x_.shape
+    y_ = ground_truth(x_.ravel()) + np.random.normal(scale=2, size=n_samples)
+    # train_mask = np.random.randint(0, 2, size=n_samples).astype(np.bool)
+    # x_train_, x_test_, y_train_, y_test_ = train_test_split(x_, y_, test_size=0.2, random_state=3)
+    # return x_train_, x_test_, y_train_, y_test_
+    return train_test_split(x_, y_, test_size=0.2, random_state=3)
 
-X_train, X_test, y_train, y_test = gen_data(100)
+def plot_data(x_, y_, color = "red", alpha=0.4, s=20):
 
-# plot ground truth
-x_plot = np.linspace(0, 10, 500)
-
-def plot_data(alpha=0.4, s=20):
-    fig = plt.figure(figsize=FIGSIZE)
-    gt = plt.plot(x_plot, ground_truth(x_plot), alpha=alpha, label='ground truth')
+    plt.figure(figsize=FIGSIZE)
+    plt.plot(x_plot, ground_truth(x_plot), alpha=alpha, label='ground truth')
 
     # plot training and testing data
-    plt.scatter(X_train, y_train, s=s, alpha=alpha)
-    plt.scatter(X_test, y_test, s=s, alpha=alpha, color='red')
+    plt.scatter(x_, y_, alpha=alpha, color=color)
     plt.xlim((0, 10))
     plt.ylabel('y')
     plt.xlabel('x')
-    # plt.show()
+
 
 annotation_kw = {'xycoords': 'data', 'textcoords': 'data',
                  'arrowprops': {'arrowstyle': '->', 'connectionstyle': 'arc'}}
@@ -54,36 +55,69 @@ annotation_kw = {'xycoords': 'data', 'textcoords': 'data',
 # plt.show()
 
 from itertools import islice
+if __name__ == "__main__":
+    X_train, X_test, y_train, y_test = gen_data(200)
+    # print X_train.shape
+    #  plot_data(X_train, y_train)
+    # plt.show()
 
-plot_data()
-est = GradientBoostingRegressor(n_estimators=1, max_depth=1, learning_rate=1.0)
-est.fit(X_train, y_train)
+    train_loss = []
+    test_loss =[]
 
-est2 = GradientBoostingRegressor(n_estimators=100, max_depth=3, learning_rate=1.0)
-est2.fit(X_train,y_train)
+    iteration = 300
+    for idx in range(1, iteration):
+        # alg = DecisionTreeRegressor(max_depth=idx)
+        alg = GradientBoostingRegressor(n_estimators=idx, max_depth=1, learning_rate=0.1, subsample=0.8)
 
-print est.estimators_[0][0].feature_importances_
+        alg.fit(X_train, y_train)
 
-ax = plt.gca()
-first = True
+        train_loss.append(mean_squared_error(y_train, alg.predict(X_train)))
+        test_loss.append(mean_squared_error(y_test, alg.predict(X_test)))
 
-# step through prediction as we add 10 more trees.
-# for pred in islice(est.staged_predict(x_plot[:, np.newaxis]), 0, est.n_estimators, 10):
-#     plt.plot(x_plot, pred, color='r', alpha=0.2)
-#     if first:
-#         ax.annotate('High bias - low variance', xy=(x_plot[x_plot.shape[0] // 2],
-#                                                     pred[x_plot.shape[0] // 2]),
-#                                                     xytext=(4, 4), **annotation_kw)
-#         first = False
+        # preds = alg.predict(x_plot[:, np.newaxis])
+        # plot_data(X_train, y_train)
+        # plt.plot(x_plot, preds)
+        # plt.show()
 
-pred = est.predict(x_plot[:, np.newaxis])
-plt.plot(x_plot, pred, color='r', label='GBRT max_depth=1')
-ax.annotate('Low bias - high variance', xy=(x_plot[x_plot.shape[0] // 2],
-                                            pred[x_plot.shape[0] // 2]),
-                                            xytext=(6.25, -6), **annotation_kw)
-plt.legend(loc='upper left')
+    print min(test_loss)
+
+    plt.plot(range(1, iteration), train_loss)
+    plt.plot(range(1, iteration), test_loss)
+    plt.show()
+
+def main():
+    X_train, X_test, y_train, y_test = gen_data(100)
 
 
-pred2 = est2.predict(x_plot[:, np.newaxis])
-plt.plot(x_plot, pred2, color='y', label='GBRT max_depth=2')
-plt.show()
+    plot_data()
+    est = GradientBoostingRegressor(n_estimators=1, max_depth=1, learning_rate=1.0)
+    est.fit(X_train, y_train)
+
+    est2 = GradientBoostingRegressor(n_estimators=8000, max_depth=1, subsample=0.5, learning_rate=0.01)
+    est2.fit(X_train, y_train)
+
+    print est.estimators_[0][0].feature_importances_
+
+    ax = plt.gca()
+    first = True
+
+    # step through prediction as we add 10 more trees.
+    # for pred in islice(est.staged_predict(x_plot[:, np.newaxis]), 0, est.n_estimators, 10):
+    #     plt.plot(x_plot, pred, color='r', alpha=0.2)
+    #     if first:
+    #         ax.annotate('High bias - low variance', xy=(x_plot[x_plot.shape[0] // 2],
+    #                                                     pred[x_plot.shape[0] // 2]),
+    #                                                     xytext=(4, 4), **annotation_kw)
+    #         first = False
+
+    pred = est.predict(x_plot[:, np.newaxis])
+    plt.plot(x_plot, pred, color='r', label='GBRT max_depth=1')
+    ax.annotate('Low bias - high variance', xy=(x_plot[x_plot.shape[0] // 2],
+                                                pred[x_plot.shape[0] // 2]),
+                                                xytext=(6.25, -6), **annotation_kw)
+    plt.legend(loc='upper left')
+
+
+    pred2 = est2.predict(x_plot[:, np.newaxis])
+    plt.plot(x_plot, pred2, color='y', label='GBRT max_depth=1, n_estimator=2')
+    plt.show()
