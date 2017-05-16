@@ -45,7 +45,7 @@ def draw_decision_boundary(model, data, admitted, rejected):
     # ax_c.set_label("$P(y = 1)$")
     # ax_c.set_ticks([0, .25, .5, .75, 1])
 
-    ax.contour(xx, yy, probs, levels=[.5], cmap="Greys", vmin=0, vmax=.6)
+    # ax.contour(xx, yy, probs, levels=[.5], cmap="Greys", vmin=0, vmax=.6)
 
     ax.scatter(data[admitted, 0],
                 data[admitted, 1],
@@ -60,8 +60,8 @@ def draw_decision_boundary(model, data, admitted, rejected):
 
 
 #load the dataset
-# data = np.loadtxt('../Data/ex2data1.txt', delimiter=',')
-data = np.loadtxt('../Data/ex2data2.txt', delimiter=',')
+data = np.loadtxt('../Data/ex2data1.txt', delimiter=',')
+# data = np.loadtxt('../Data/ex2data2.txt', delimiter=',')
 
 
 # X = data[:, :2]/100.0
@@ -97,4 +97,4 @@ print 'Train Accuracy: %f' % ((count / float(y.size)) * 100.0)
 # plt.plot(ex1, ex2, color='r', label='decision boundary');
 # plt.show()
 
-draw_decision_boundary(alg, X, admitted, rejected)
+# draw_decision_boundary(alg, X, admitted, rejected)

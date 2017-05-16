@@ -67,7 +67,7 @@ def map_feature(x1, x2):
     return out
 
 #load the dataset
-data = loadtxt('../Data/ex2data2.txt', delimiter=',')
+data = loadtxt('../Data/ex2data1.txt', delimiter=',')
 
 X = data[:, 0:2]
 y = data[:, 2]
@@ -79,7 +79,7 @@ scatter(X[neg, 0], X[neg, 1], marker='x', c='r')
 xlabel('Microchip Test 1')
 ylabel('Microchip Test 2')
 legend(['y = 1', 'y = 0'])
-#show()
+show()
 
 m, n = X.shape
 
@@ -103,4 +103,4 @@ def decorated_cost(theta):
     return cost_function_reg(theta, it, y, l)
 
 print initial_theta.shape
-print fmin_bfgs(decorated_cost, initial_theta)
+# print fmin_bfgs(decorated_cost, initial_theta)
